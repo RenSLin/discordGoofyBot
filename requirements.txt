@@ -1,0 +1,4 @@
+python-dotenv~=1.1.1
+huggingface-hub~=0.33.2
+discord.py==2.5.2
+requests==2.32.4
