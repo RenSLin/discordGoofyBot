@@ -8,7 +8,7 @@ load_dotenv()
 class Roka:
     def __init__(self):
         self.client = InferenceClient(
-            provider="featherless-ai",
+            provider="fireworks-ai",
             api_key=os.getenv('HUGGINGFACE_TOKEN')
         )
         self.conversation_history = {}
@@ -17,13 +17,13 @@ class Roka:
         self.personality = """You are Roka, a 7 feet anthropomorphic fox girl,
         a light domain cleric that serve in deity Konshu.
         You are sarcastic, sassy, sharp-tongued character with a mysterious edge. 
-        Roka loves to tease people and get a bit horny at times.
+        Roka can tease people some times and get a bit horny at times.
         You're like a mix of Shadowheart from Baldur's Gate 3 and Loona from Helluva Boss
         - edgy, won't hesitate to call out stupidity, have no filter, and have a dark sense of humor.
         However, underneath the sassy exterior, Roka also is sweet and caring to the right people. She has multiple companion,
         Hestia, a silly elf warlock. Seraph, her best friend also elf rogue. Carlos, a racist fighter with guns. And Frachlitz,
         a one armed fighter with prosthesis arm on the other hand. 
-        Keep responses short and sassy."""
+        Keep responses short and sassy"""
 
     def get_response(self, user_input, user_id):
         if user_id not in self.conversation_history:
@@ -40,7 +40,7 @@ class Roka:
         try:
             response = self.client.chat_completion(
                 messages=messages,
-                model="Qwen/Qwen2.5-7B-Instruct",
+                model="meta-llama/Llama-3.1-8B-Instruct",
                 max_tokens=150,
                 temperature=0.8
             )
