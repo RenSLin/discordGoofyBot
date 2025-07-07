@@ -1,4 +1,6 @@
 import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import discord
 from discord.ext import commands
@@ -50,5 +52,26 @@ async def forget_command(ctx):
     else:
         await ctx.send("There's nothing to forget, genius.")
 
+
+class HealthHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b'<h1>Roka Bot is Online!</h1><p>Discord bot is running successfully.</p>')
+
+    def log_message(self, format, *args):
+        # Suppress HTTP logs to keep console clean
+        pass
+
+
+def start_health_server():
+    port = int(os.environ.get('PORT', 8000))
+    server = HTTPServer(('0.0.0.0', port), HealthHandler)
+    print(f"Health server starting on port {port}")
+    server.serve_forever()
+
+
+threading.Thread(target=start_health_server, daemon=True).start()
 
 bot.run(os.getenv('DISCORD_TOKEN'))
