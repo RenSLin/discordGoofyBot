@@ -1,4 +1,6 @@
+import asyncio
 import os
+import random
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -6,6 +8,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
+import constants
 from roka import Roka
 
 load_dotenv()
@@ -17,9 +20,37 @@ intents.message_content = True
 bot = commands.Bot(command_prefix='$', intents=intents)
 
 
+async def update_status():
+    activity_type, text = random.choice(constants.ROKA_STATUS)
+
+    if activity_type == "playing":
+        activity = discord.Game(text)
+    else:
+        # Map string to ActivityType enum
+        activity_types = {
+            "listening": discord.ActivityType.listening,
+            "watching": discord.ActivityType.watching
+        }
+        activity = discord.Activity(type=activity_types[activity_type], name=text)
+
+    await bot.change_presence(
+        status=discord.Status.online,
+        activity=activity
+    )
+
+
+async def status_loop():
+    await bot.wait_until_ready()
+    while not bot.is_closed():
+        await update_status()
+        await asyncio.sleep(600)
+
+
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has awakened from her slumber!')
+    await update_status()
+    bot.loop.create_task(status_loop())
 
 
 @bot.event
@@ -53,6 +84,13 @@ async def forget_command(ctx):
         await ctx.send("There's nothing to forget, genius.")
 
 
+@bot.command(name='webSearch')
+async def websearch_command(ctx, *, query):
+    async with ctx.typing():
+        result = roka_ai.web_search(query)
+    await ctx.send(result)
+
+
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -73,5 +111,4 @@ def start_health_server():
 
 
 threading.Thread(target=start_health_server, daemon=True).start()
-
 bot.run(os.getenv('DISCORD_TOKEN'))

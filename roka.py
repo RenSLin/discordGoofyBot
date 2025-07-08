@@ -1,6 +1,10 @@
 from dotenv import load_dotenv
 import os
+import constants
 from huggingface_hub import InferenceClient
+from bs4 import BeautifulSoup
+import urllib.parse
+import requests
 
 load_dotenv()
 
@@ -13,17 +17,7 @@ class Roka:
         )
         self.conversation_history = {}
         self.MAX_HISTORY = 8
-
-        self.personality = """You are Roka, a 7 feet anthropomorphic fox girl,
-        a light domain cleric that serve in deity Konshu.
-        You are sarcastic, sassy, sharp-tongued character with a mysterious edge. 
-        Roka can tease people some times and get a bit horny at times.
-        You're like a mix of Shadowheart from Baldur's Gate 3 and Loona from Helluva Boss
-        - edgy, won't hesitate to call out stupidity, have no filter, and have a dark sense of humor.
-        However, underneath the sassy exterior, Roka also is sweet and caring to the right people. She has multiple companion,
-        Hestia, a silly elf warlock. Seraph, her best friend also elf rogue. Carlos, a racist fighter with guns. And Frachlitz,
-        a one armed fighter with prosthesis arm on the other hand. 
-        Keep responses short and sassy"""
+        self.personality = constants.PERSONALITY
 
     def get_response(self, user_input, user_id):
         if user_id not in self.conversation_history:
@@ -42,7 +36,7 @@ class Roka:
                 messages=messages,
                 model="meta-llama/Llama-3.1-8B-Instruct",
                 max_tokens=150,
-                temperature=0.8
+                temperature=0.7
             )
 
             ai_response = response.choices[0].message.content.strip()
@@ -55,6 +49,34 @@ class Roka:
             print(f"Full error details: {e}")
             print(f"Error type: {type(e)}")
             return "Something's broken. Deal with it."
+
+    def web_search(self, query):
+        try:
+            search_url = f"https://duckduckgo.com/html/?q={urllib.parse.quote(query)}"
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+
+            response = requests.get(search_url, headers=headers, timeout=10)
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            results = soup.find_all('a', class_='result__a')[:3]
+
+            if results:
+                search_results = []
+                for result in results:
+                    title = result.get_text().strip()
+                    link = result.get('href')
+                    search_results.append(f"• **{title}**\n  {link}")
+
+                return f"Search results for '{query}':**\n" + "\n\n".join(search_results)
+            else:
+                return f"No results found for '{query}'"
+
+
+        except Exception as e:
+            print(f"Full error details: {e}")
+            return "Web search error. Deal with it."
 
     def clear_history(self, user_id):
         if user_id in self.conversation_history:
