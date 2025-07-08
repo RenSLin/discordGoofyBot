@@ -1,6 +1,7 @@
 from dotenv import load_dotenv
 import os
-import constants
+from character import affection
+from constant import constants
 from huggingface_hub import InferenceClient
 from bs4 import BeautifulSoup
 import urllib.parse
@@ -18,8 +19,9 @@ class Roka:
         self.conversation_history = {}
         self.MAX_HISTORY = 8
         self.personality = constants.PERSONALITY
+        self.affection_system = affection.AffectionSystem(self.client)
 
-    def get_response(self, user_input, user_id):
+    def get_response(self, user_input, user_id, affection_prompt):
         if user_id not in self.conversation_history:
             self.conversation_history[user_id] = []
 
@@ -28,13 +30,13 @@ class Roka:
         if len(self.conversation_history[user_id]) > self.MAX_HISTORY * 2:
             self.conversation_history[user_id] = self.conversation_history[user_id][-self.MAX_HISTORY * 2:]
 
-        messages = [{"role": "system", "content": self.personality}]
+        messages = [{"role": "system", "content": self.personality + affection_prompt}]
         messages.extend(self.conversation_history[user_id])
 
         try:
             response = self.client.chat_completion(
                 messages=messages,
-                model="meta-llama/Llama-3.1-8B-Instruct",
+                model=constants.MODEL,
                 max_tokens=150,
                 temperature=0.7
             )
@@ -49,6 +51,12 @@ class Roka:
             print(f"Full error details: {e}")
             print(f"Error type: {type(e)}")
             return "Something's broken. Deal with it."
+
+    def get_response_with_affection(self, user_input, user_id):
+        affection_change = self.affection_system.analyze_message(user_input)
+        new_affection = self.affection_system.modify_relationship(user_id, affection_change)
+        affection_modifier = self.affection_system.get_personality_modifier_for_affection(new_affection)
+        return self.get_response(user_input, user_id, affection_modifier)
 
     def web_search(self, query):
         try:

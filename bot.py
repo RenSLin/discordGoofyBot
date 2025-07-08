@@ -8,8 +8,8 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-import constants
-from roka import Roka
+from constant import constants
+from character.roka import Roka
 
 load_dotenv()
 
@@ -61,13 +61,16 @@ async def on_message(message):
     if not message.content.startswith('$'):
         return
 
-    if message.content.startswith('$test') or message.content.startswith('$forget'):
+    if (message.content.startswith('$test')
+            or message.content.startswith('$forget')
+            or message.content.startswith('webSearch')
+            or message.content.startswith('$affection')):
         await bot.process_commands(message)
         return
 
     user_message = message.content[1:].strip()
     if user_message:  # Make sure it's not just "$"
-        response = roka_ai.get_response(user_message, message.author.id)
+        response = roka_ai.get_response_with_affection(user_message, message.author.id)
         await message.channel.send(response)
 
 
@@ -89,6 +92,12 @@ async def websearch_command(ctx, *, query):
     async with ctx.typing():
         result = roka_ai.web_search(query)
     await ctx.send(result)
+
+@bot.command(name='affection')
+async def affection_command(ctx):
+    level = roka_ai.affection_system.get_relationship(ctx.author.id)
+    tier = roka_ai.affection_system.get_affection_tier(level)
+    await ctx.send(f"**{ctx.author.display_name}**'s relationship with Roka: **{tier}** ({level}/100)")
 
 
 class HealthHandler(BaseHTTPRequestHandler):

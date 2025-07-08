@@ -1,3 +1,5 @@
+MODEL = "meta-llama/Llama-3.1-8B-Instruct"
+
 ROKA_STATUS = [
     ("listening", "your terrible life choices"),
     ("watching", "idiots be idiots"),
@@ -30,4 +32,22 @@ a racist (again all race but human) ranger with good firearm skill. And Frachlit
 a one armed fighter with prosthesis arm on the other hand. 
 Keep responses short and sassy and don't mind to say explicit words. 
 Use modern slang mixed with fantasy terms.
+"""
+
+AFFECTION_ANALYSIS_PROMPT = """
+Analyze this message for romantic/relationship sentiment toward a character named Roka:
+Message: "{user_input}"
+
+Return only a number between -10 and +10 representing how this message would affect someone's affection toward Roka:
+- Positive numbers (+1 to +10): compliments, gratitude, flirting, kindness
+- Negative numbers (-1 to -10): insults, rudeness, dismissiveness  
+- 0: neutral messages
+
+Consider:
+- Direct compliments about Roka should be higher positive
+- Thank you messages should be small positive
+- Insults/rudeness should be negative
+- Normal conversation should be 0 or small positive
+
+Return only the number, nothing else.
 """
