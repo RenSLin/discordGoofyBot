@@ -6,7 +6,7 @@ from huggingface_hub import InferenceClient
 from bs4 import BeautifulSoup
 import urllib.parse
 import requests
-
+from db import RokaDatabase
 load_dotenv()
 
 
@@ -16,10 +16,11 @@ class Roka:
             provider="fireworks-ai",
             api_key=os.getenv('HUGGINGFACE_TOKEN')
         )
+        self.db = RokaDatabase()
         self.conversation_history = {}
         self.MAX_HISTORY = 8
         self.personality = constants.PERSONALITY
-        self.affection_system = affection.AffectionSystem(self.client)
+        self.affection_system = affection.AffectionSystem(self.client, self.db)
 
     def get_response(self, user_input, user_id, affection_prompt):
         if user_id not in self.conversation_history:
@@ -37,7 +38,7 @@ class Roka:
             response = self.client.chat_completion(
                 messages=messages,
                 model=constants.MODEL,
-                max_tokens=150,
+                max_tokens=180,
                 temperature=0.7
             )
 

@@ -2,17 +2,21 @@ from constant import constants
 
 class AffectionSystem:
     #map for storing user relationship
-    def __init__(self, ai_client=None):
+    def __init__(self, ai_client=None, database=None):
         self.relationship = {}
         self.ai_client = ai_client
+        self.database = database
 
     def get_relationship(self, user_id):
-        return self.relationship.get(str(user_id), 0)
+        if self.database:
+            return self.database.get_affection(user_id)
+        return 0
 
     def modify_relationship(self, user_id, change):
         cur_level = self.get_relationship(user_id)
         new_level = max(-100, min(100, cur_level + change))
-        self.relationship[str(user_id)] = new_level
+        if self.database:
+            self.database.save_affection(user_id, new_level)
         return new_level
 
     def analyze_message(self, user_input):
