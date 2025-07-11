@@ -17,22 +17,17 @@ class Roka:
             api_key=os.getenv('HUGGINGFACE_TOKEN')
         )
         self.db = RokaDatabase()
-        self.conversation_history = {}
-        self.MAX_HISTORY = 8
+        self.MAX_HISTORY = 10
         self.personality = constants.PERSONALITY
         self.affection_system = affection.AffectionSystem(self.client, self.db)
 
     def get_response(self, user_input, user_id, affection_prompt):
-        if user_id not in self.conversation_history:
-            self.conversation_history[user_id] = []
 
-        self.conversation_history[user_id].append({"role": "user", "content": user_input})
-
-        if len(self.conversation_history[user_id]) > self.MAX_HISTORY * 2:
-            self.conversation_history[user_id] = self.conversation_history[user_id][-self.MAX_HISTORY * 2:]
+        self.db.save_message(user_id, "user", user_input)
+        history = self.db.get_chat_history(user_id)
 
         messages = [{"role": "system", "content": self.personality + affection_prompt}]
-        messages.extend(self.conversation_history[user_id])
+        messages.extend(history)
 
         try:
             response = self.client.chat_completion(
@@ -44,7 +39,7 @@ class Roka:
 
             ai_response = response.choices[0].message.content.strip()
             # Add AI response to history
-            self.conversation_history[user_id].append({"role": "assistant", "content": ai_response})
+            self.db.save_message(user_id, "assistant", ai_response)
 
             return ai_response
 
@@ -88,7 +83,4 @@ class Roka:
             return "Web search error. Deal with it."
 
     def clear_history(self, user_id):
-        if user_id in self.conversation_history:
-            del self.conversation_history[user_id]
-            return True
-        return False
+        return self.db.clear_chat_history(user_id)

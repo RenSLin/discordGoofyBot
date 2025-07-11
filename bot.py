@@ -99,6 +99,12 @@ async def affection_command(ctx):
     tier = roka_ai.affection_system.get_affection_tier(level)
     await ctx.send(f"**{ctx.author.display_name}**'s relationship with Roka: **{tier}** ({level}/100)")
 
+@bot.command(name='wipeRelationship')
+async def wipe_relationship_command(ctx):
+    roka_ai.db.clear_affection(ctx.author.id)
+    level = roka_ai.affection_system.get_relationship(ctx.author.id)
+    tier = roka_ai.affection_system.get_affection_tier(level)
+    await ctx.send(f"**{ctx.author.display_name}**'s relationship reset with Roka: **{tier}** ({level}/100)")
 
 class HealthHandler(BaseHTTPRequestHandler):
     def do_GET(self):

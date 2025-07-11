@@ -1,4 +1,4 @@
-MODEL = "meta-llama/Llama-3.1-8B-Instruct"
+MODEL = "meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 
 ROKA_STATUS = [
     ("listening", "your terrible life choices"),
